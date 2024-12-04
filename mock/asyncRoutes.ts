@@ -51,6 +51,42 @@ const permissionRouter = {
           }
         }
       ]
+    },
+    {
+      path: "/permission/userMng",
+      meta: {
+        title: "用户管理",
+        roles: ["admin"],
+      },
+      children: [
+        {
+          path: '/permission/userMng/list',
+          name: 'userList',
+          component: 'userMng/userList.vue',
+          meta: {
+            title: '用户列表',
+            roles: ['admin'],  // 只有admin角色可以访问
+          }
+        },
+        {
+          path: '/permission/userMng/detail',
+          name: 'userDetail',
+          component: '/userMng/userDetail.vue',
+          meta: {
+            title: '用户详情',
+            roles: ['admin'],  // 只有admin角色可以访问
+          }
+        }
+      ]
+    },
+    {
+      path: "/permission/roleMng",
+      name: "roleMng",
+      component: "roleMng/index.vue",
+      meta: {
+        title: "角色管理",
+        roles: ["admin"],
+      }
     }
   ]
 };

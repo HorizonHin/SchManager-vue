@@ -1,7 +1,8 @@
 import { http } from "@/utils/http";
 
-type Result = {
+export type Result = {
   success: boolean;
+  msg: string;
   data: Array<any>;
 };
 

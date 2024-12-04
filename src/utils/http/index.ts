@@ -59,57 +59,74 @@ class PureHttp {
 
   /** 请求拦截 */
   private httpInterceptorsRequest(): void {
+    console.log("请求拦截开始:", {
+      axiosInstance: PureHttp.axiosInstance,
+      defaultHeaders: PureHttp.axiosInstance.defaults.headers,
+    });
+
     PureHttp.axiosInstance.interceptors.request.use(
       async (config: PureHttpRequestConfig): Promise<any> => {
+        console.log("请求拦截 - 当前请求配置:", config);
+
         // 开启进度条动画
         NProgress.start();
+
         // 优先判断post/get等方法是否传入回调，否则执行初始化设置等回调
         if (typeof config.beforeRequestCallback === "function") {
+          console.log("调用传入的 beforeRequestCallback 回调");
           config.beforeRequestCallback(config);
           return config;
         }
         if (PureHttp.initConfig.beforeRequestCallback) {
+          console.log("调用默认的 beforeRequestCallback 回调");
           PureHttp.initConfig.beforeRequestCallback(config);
           return config;
         }
+
         /** 请求白名单，放置一些不需要`token`的接口（通过设置请求白名单，防止`token`过期后再请求造成的死循环问题） */
         const whiteList = ["/refresh-token", "/login"];
-        return whiteList.some(url => config.url.endsWith(url))
-          ? config
-          : new Promise(resolve => {
-              const data = getToken();
-              if (data) {
-                const now = new Date().getTime();
-                const expired = parseInt(data.expires) - now <= 0;
-                if (expired) {
-                  if (!PureHttp.isRefreshing) {
-                    PureHttp.isRefreshing = true;
-                    // token过期刷新
-                    useUserStoreHook()
-                      .handRefreshToken({ refreshToken: data.refreshToken })
-                      .then(res => {
-                        const token = res.data.accessToken;
-                        config.headers["Authorization"] = formatToken(token);
-                        PureHttp.requests.forEach(cb => cb(token));
-                        PureHttp.requests = [];
-                      })
-                      .finally(() => {
-                        PureHttp.isRefreshing = false;
-                      });
-                  }
-                  resolve(PureHttp.retryOriginalRequest(config));
-                } else {
-                  config.headers["Authorization"] = formatToken(
-                    data.accessToken
-                  );
-                  resolve(config);
-                }
-              } else {
-                resolve(config);
+        if (whiteList.some(url => config.url.endsWith(url))) {
+          console.log("请求 URL 在白名单中，无需添加 token");
+          return config;
+        }
+
+        return new Promise(resolve => {
+          const data = getToken();
+          if (data) {
+            const now = new Date().getTime();
+            const expired = parseInt(data.expires) - now <= 0;
+            if (expired) {
+              console.log("Token 已过期，开始刷新 token...");
+              if (!PureHttp.isRefreshing) {
+                PureHttp.isRefreshing = true;
+                // token过期刷新
+                useUserStoreHook()
+                  .handRefreshToken({ refreshToken: data.refreshToken })
+                  .then(res => {
+                    const token = res.data.accessToken;
+                    config.headers["Authorization"] = formatToken(token);
+                    PureHttp.requests.forEach(cb => cb(token));
+                    PureHttp.requests = [];
+                  })
+                  .finally(() => {
+                    PureHttp.isRefreshing = false;
+                    console.log("Token 刷新完成");
+                  });
               }
-            });
+              resolve(PureHttp.retryOriginalRequest(config));
+            } else {
+              console.log("Token 未过期，使用现有 Token");
+              config.headers["Authorization"] = formatToken(data.accessToken);
+              resolve(config);
+            }
+          } else {
+            console.log("未找到有效的 Token");
+            resolve(config);
+          }
+        });
       },
       error => {
+        console.error("请求拦截错误:", error);
         return Promise.reject(error);
       }
     );
@@ -118,32 +135,48 @@ class PureHttp {
   /** 响应拦截 */
   private httpInterceptorsResponse(): void {
     const instance = PureHttp.axiosInstance;
+    console.log("响应拦截开始:", {
+      axiosInstance: instance,
+      defaultHeaders: instance.defaults.headers,
+    });
+
     instance.interceptors.response.use(
       (response: PureHttpResponse) => {
         const $config = response.config;
+        console.log("响应拦截 - 当前响应配置:", $config);
+        console.log("响应数据:", response);
+
         // 关闭进度条动画
         NProgress.done();
+
         // 优先判断post/get等方法是否传入回调，否则执行初始化设置等回调
         if (typeof $config.beforeResponseCallback === "function") {
+          console.log("调用传入的 beforeResponseCallback 回调");
           $config.beforeResponseCallback(response);
           return response.data;
         }
         if (PureHttp.initConfig.beforeResponseCallback) {
+          console.log("调用默认的 beforeResponseCallback 回调");
           PureHttp.initConfig.beforeResponseCallback(response);
           return response.data;
         }
+
         return response.data;
       },
       (error: PureHttpError) => {
         const $error = error;
         $error.isCancelRequest = Axios.isCancel($error);
+        console.error("响应拦截错误:", $error);
+
         // 关闭进度条动画
         NProgress.done();
+
         // 所有的响应异常 区分来源为取消请求/非取消请求
         return Promise.reject($error);
       }
     );
   }
+
 
   /** 通用请求工具函数 */
   public request<T>(

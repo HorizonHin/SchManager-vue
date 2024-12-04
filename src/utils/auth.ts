@@ -137,5 +137,5 @@ export const hasPerms = (value: string | Array<string>): boolean => {
   const isAuths = isString(value)
     ? permissions.includes(value)
     : isIncludeAllChildren(value, permissions);
-  return isAuths ? true : false;
+  return isAuths;
 };

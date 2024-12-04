@@ -21,9 +21,15 @@ import User from "@iconify-icons/ri/user-3-fill";
 defineOptions({
   name: "Login"
 });
+const isRegister = ref(false);
+const toggleRegister = () => {
+  isRegister.value = !isRegister.value;
+};
+
 const router = useRouter();
 const loading = ref(false);
 const ruleFormRef = ref<FormInstance>();
+const registerFormRef = ref<FormInstance>();
 
 const { initStorage } = useLayout();
 initStorage();
@@ -37,13 +43,34 @@ const ruleForm = reactive({
   password: "admin123"
 });
 
+
+const registerForm = reactive({
+  username: "",
+  password: "",
+  confirmPassword: ""
+});
+
+const onRegister = async (formEl: FormInstance | undefined) => {
+  if (!formEl) return;
+  await formEl.validate((valid) => {
+    if (valid) {
+      loading.value = true;
+      // 假设执行注册逻辑
+      setTimeout(() => {
+        message("注册成功", { type: "success" });
+        isRegister.value = false; // 切换回登录界面
+        loading.value = false;
+      }, 1000);
+    }
+  });
+};
 const onLogin = async (formEl: FormInstance | undefined) => {
   if (!formEl) return;
   await formEl.validate((valid, fields) => {
     if (valid) {
       loading.value = true;
       useUserStoreHook()
-        .loginByUsername({ username: ruleForm.username, password: "admin123" })
+        .loginByUsername({ username: ruleForm.username, password: ruleForm.password })
         .then(res => {
           if (res.success) {
             // 获取后端路由
@@ -90,6 +117,7 @@ onBeforeUnmount(() => {
         @change="dataThemeChange"
       />
     </div>
+    
     <div class="login-container">
       <div class="img">
         <component :is="toRaw(illustration)" />
@@ -100,12 +128,13 @@ onBeforeUnmount(() => {
           <Motion>
             <h2 class="outline-none">{{ title }}</h2>
           </Motion>
-
+        <!-- 登录表单 -->
           <el-form
             ref="ruleFormRef"
             :model="ruleForm"
             :rules="loginRules"
             size="large"
+            v-show="!isRegister"
           >
             <Motion :delay="100">
               <el-form-item
@@ -149,9 +178,95 @@ onBeforeUnmount(() => {
               >
                 登录
               </el-button>
+               <el-button
+                class="w-full mt-4"
+                size="default"
+                type="primary"
+                :loading="loading"
+                @click="toggleRegister"
+              >
+               注册
+              </el-button>
+            
+            </Motion>
+          </el-form>
+          <!-- 注册表单 -->
+            <el-form
+            ref="registerFormRef"
+            :model="registerForm"
+            :rules="registerRules"
+            size="large"
+            validate-on-rule-change
+            v-show="isRegister"
+          >
+            <Motion :delay="100">
+              <el-form-item
+                :rules="[
+                  {
+                    required: true,
+                    message: '请输入账号',
+                    trigger: 'blur'
+                  }
+                ]"
+                prop="username"
+              >
+                <el-input
+                  v-model="registerForm.username"
+                  clearable
+                  placeholder="账号"
+                  :prefix-icon="useRenderIcon(User)"
+                />
+              </el-form-item>
+            </Motion>
+
+            <Motion :delay="150">
+              <el-form-item prop="password">
+                <el-input
+                  v-model="registerForm.password"
+                  clearable
+                  show-password
+                  placeholder="密码"
+                  :prefix-icon="useRenderIcon(Lock)"
+                />
+              </el-form-item>
+            </Motion>
+
+            <Motion :delay="150">
+              <el-form-item prop="confirmPassword">
+                <el-input
+                  v-model="registerForm.confirmPassword"
+                  clearable
+                  show-password
+                  placeholder="确认密码"
+                  :prefix-icon="useRenderIcon(Lock)"
+                />
+              </el-form-item>
+            </Motion>
+
+            <Motion :delay="250">
+              <el-button
+                class="w-full mt-4"
+                size="default"
+                type="primary"
+                :loading="loading"
+                @click="toggleRegister"
+              >
+                登录
+              </el-button>
+               <el-button
+                class="w-full mt-4"
+                size="default"
+                type="primary"
+                :loading="loading"
+                @click="onRegister(ruleFormRef)"
+              >
+               注册
+              </el-button>
+            
             </Motion>
           </el-form>
         </div>
+        
       </div>
     </div>
   </div>

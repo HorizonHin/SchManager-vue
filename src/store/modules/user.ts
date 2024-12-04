@@ -15,6 +15,7 @@ import {
 } from "@/api/user";
 import { useMultiTagsStoreHook } from "./multiTags";
 import { type DataInfo, setToken, removeToken, userKey } from "@/utils/auth";
+import { http } from "@/utils/http";
 
 export const useUserStore = defineStore({
   id: "pure-user",
@@ -33,7 +34,7 @@ export const useUserStore = defineStore({
     // 是否勾选了登录页的免登录
     isRemembered: false,
     // 登录页的免登录存储几天，默认7天
-    loginDay: 7
+    loginDay: 1
   }),
   actions: {
     /** 存储头像 */
@@ -67,7 +68,7 @@ export const useUserStore = defineStore({
     /** 登入 */
     async loginByUsername(data) {
       return new Promise<UserResult>((resolve, reject) => {
-        getLogin(data)
+        http.request<UserResult>("post", "/api/user/login", { data })
           .then(data => {
             if (data?.success) setToken(data.data);
             resolve(data);

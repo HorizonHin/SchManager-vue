@@ -44,7 +44,7 @@
     "src/**/*.vue",
     "types/*.d.ts",
     "vite.config.ts"
-  ],
+, "types/Result.ts", "src/router/modules/userMng"  ],
   "exclude": [
     "dist",
     "**/*.js",

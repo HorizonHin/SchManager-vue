@@ -44,7 +44,7 @@ const modules: Record<string, any> = import.meta.glob(
 
 /** 原始静态路由（未做任何处理） */
 const routes = [];
-
+// 把所有modules的路由合并到 routes 数组中
 Object.keys(modules).forEach(key => {
   routes.push(modules[key].default);
 });
@@ -59,7 +59,7 @@ export const constantMenus: Array<RouteComponent> = ascending(
   routes.flat(Infinity)
 ).concat(...remainingRouter);
 
-/** 不参与菜单的路由 */
+/** 不参与菜单的路由,remaining.ts */
 export const remainingPaths = Object.keys(remainingRouter).map(v => {
   return remainingRouter[v].path;
 });
@@ -107,7 +107,7 @@ const { VITE_HIDE_HOME } = import.meta.env;
 
 router.beforeEach((to: ToRouteType, _from, next) => {
   if (to.meta?.keepAlive) {
-    handleAliveRoute(to, "add");
+    handleAliveRoute(to, "add");  //把已经缓存路由添加到to
     // 页面整体刷新和点击标签页刷新
     if (_from.name === undefined || _from.name === "Redirect") {
       handleAliveRoute(to);
@@ -128,6 +128,7 @@ router.beforeEach((to: ToRouteType, _from, next) => {
   function toCorrectRoute() {
     whiteList.includes(to.fullPath) ? next(_from.fullPath) : next();
   }
+
   if (Cookies.get(multipleTabsKey) && userInfo) {
     // 无权限跳转403页面
     if (to.meta?.roles && !isOneOfArray(to.meta?.roles, userInfo?.roles)) {
