@@ -1,11 +1,11 @@
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import type { FormInstance } from "element-plus";
-import { addUser } from '@/api/admin';
+import { addUser,selectUsers } from '@/api/admin';
 import { message } from '@/utils/message';
 import { Loading } from 'element-plus/es/components/loading/src/service.mjs';
-import { c } from 'node_modules/vite/dist/node/types.d-aGj9QkWt';
+
 
 defineOptions({
   name: "userList"
@@ -13,11 +13,27 @@ defineOptions({
 
 // 数据和状态
 const users = ref([
-  { id: 1, username: 'johndoe', name: 'John Doe', email: 'john@example.com', gender: '男', role: 'admin' },
-  { id: 2, username: 'janedoe', name: 'Jane Doe', email: 'jane@example.com', gender: '女', role: 'user' },
-  { id: 3, username: 'alice', name: 'Alice Wonderland', email: 'alice@example.com', gender: '女', role: 'user' },
-  { id: 4, username: 'bob', name: 'Bob Marley', email: 'bob@example.com', gender: '男', role: 'admin' }
+  { id: 1, username: 'johndoe', real_name: 'John Doe', email: 'john@example.com', gender: '男', role: 'admin' },
 ]);
+
+const selectAllUsers = (data: any | undefined) => { 
+  selectUsers(data).then(res => {
+    if (res.success) {
+      users.value = res.data;
+      message('查询用户成功');
+    } else {
+      message('查询用户失败');
+    }
+  }).catch((error) => {
+    console.error('查询用户请求失败:', error);
+    if (error.response) {
+      console.error('API Error:', error.response.data);
+    } else if (error.message) {
+      console.error('Request Error:', error.message);
+    }
+    message('查询用户失败');
+  });
+};
 
 const searchQuery = ref('');
 const addUserDialogVisible = ref(false);
@@ -39,7 +55,7 @@ const filteredUsers = computed(() => {
   const query = searchQuery.value.toLowerCase();
   return users.value.filter(user =>
     user.username.toLowerCase().includes(query) ||
-    user.name.toLowerCase().includes(query) ||
+    user.real_name.toLowerCase().includes(query) ||
     user.email.toLowerCase().includes(query) ||
     user.gender.toLowerCase().includes(query)
   );
@@ -48,12 +64,7 @@ const filteredUsers = computed(() => {
 // 方法：查询用户
 const searchUser = () => {
   console.log('Searching for users with query:', searchQuery.value);
-};
-
-// 方法：打开新增用户对话框
-const openAddUserDialog = () => {
-  addUserDialogVisible.value = true;
-};
+}
 
 // 方法：重置新增用户表单
 const resetAddUserForm = () => {
@@ -120,6 +131,10 @@ const deleteUser = (user) => {
   console.log('Deleting user:', user.username);
   // 调用API删除用户（略）
 };
+
+onMounted(() => { 
+  selectAllUsers(undefined);
+});
 </script>
 
 
@@ -146,7 +161,7 @@ const deleteUser = (user) => {
     <el-table :data="filteredUsers" style="width: 100%" stripe>
       <el-table-column label="#" type="index" width="80" />
       <el-table-column prop="username" label="账号" />
-      <el-table-column prop="name" label="名称" />
+      <el-table-column prop="real_name" label="名称" />
       <el-table-column prop="email" label="邮箱地址" />
       <el-table-column label="操作" width="300">
         <template #default="{ row }">
@@ -179,7 +194,7 @@ const deleteUser = (user) => {
     <el-form-item label="角色" prop="role" :rules="[{ required: true, message: '请选择角色', trigger: 'change' }]">
       <el-select v-model="newUser.role" placeholder="请选择角色">
         <el-option label="管理员" value="admin" />
-        <el-option label="普通用户" value="user" />
+        <el-option label="普通用户" value="common" />
       </el-select>
     </el-form-item>
 

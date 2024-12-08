@@ -56,7 +56,7 @@ const permissionRouter = {
       path: "/permission/userMng",
       meta: {
         title: "用户管理",
-        roles: ["admin"],
+        roles: ["admin"]
       },
       children: [
         {

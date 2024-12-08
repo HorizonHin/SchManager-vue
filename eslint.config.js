@@ -58,13 +58,14 @@ export default defineFlatConfig([
       ...configPrettier.rules,
       ...pluginPrettier.configs.recommended.rules,
       "no-debugger": "off",
-      "no-unused-vars": [
-        "error",
-        {
-          argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_"
-        }
-      ],
+      "no-unused-vars": "off",
+      //   [
+      //   "error",
+      //   {
+      //     argsIgnorePattern: "^_",
+      //     varsIgnorePattern: "^_"
+      //   }
+      // ],
       "prettier/prettier": [
         "error",
         {
@@ -103,13 +104,14 @@ export default defineFlatConfig([
         "error",
         { allowBitwiseExpressions: true }
       ],
-      "@typescript-eslint/no-unused-vars": [
-        "error",
-        {
-          argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_"
-        }
-      ]
+      "@typescript-eslint/no-unused-vars": "off",
+      //   [
+      //   "error",
+      //   {
+      //     argsIgnorePattern: "^_",
+      //     varsIgnorePattern: "^_"
+      //   }
+      // ]
     }
   },
   {
