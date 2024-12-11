@@ -2,9 +2,12 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue';
 import type { FormInstance } from "element-plus";
-import { addUser,selectUsers } from '@/api/admin';
+import {
+  addUser, selectUsers, getAllRole, selectRoleByUsername as selectRoleByUsernameApi,
+  updateUserRole
+} from '@/api/admin';
 import { message } from '@/utils/message';
-import { Loading } from 'element-plus/es/components/loading/src/service.mjs';
+
 
 
 defineOptions({
@@ -15,6 +18,52 @@ defineOptions({
 const users = ref([
   { id: 1, username: 'johndoe', real_name: 'John Doe', email: 'john@example.com', gender: '男', role: 'admin' },
 ]);
+
+const roles = ref([]);
+const rolesOfUser = ref([]);
+
+const curUser = ref(" ");
+
+async function selectAllRoles() {
+  getAllRole().then(res => {
+    if (res.success) {
+      roles.value = res.data.map(role => ({ 
+        key: role,
+        label: role
+    }));
+  
+      message('查询角色成功');
+    } else {
+      message('查询角色失败');
+    }
+  }).catch((error) => {      
+    console.error('查询角色请求失败:', error);
+    if (error.response) {
+      console.error('API Error:', error.response.data);
+    } else if (error.message) {
+      console.error('Request Error:', error.message);
+    }
+    message('查询角色失败');
+  });    
+} 
+async function selectRoleByUsername(username: string) {
+  selectRoleByUsernameApi(username).then(res => {
+    if (res.success) {
+      rolesOfUser.value = res.data;
+      console.log(res.data);      
+    } else {      
+      console.error('查询角色失败');          
+    }
+  }).catch((error) => {
+    console.error('查询角色请求失败:', error);
+    if (error.response) {
+      console.error('API Error:', error.response.data);
+    } else if (error.message) {
+      console.error('Request Error:', error.message);
+    }
+    message('查询角色失败');
+  });
+} 
 
 const selectAllUsers = (data: any | undefined) => { 
   selectUsers(data).then(res => {
@@ -115,9 +164,28 @@ const submitNewUser = async (formEl: FormInstance | undefined) => {
 
 
 // 方法：修改角色
-const modifyRole = (user) => {
-  console.log('Modifying role for user:', user.username);
-  // 调用API修改角色（略）
+
+const isModifyRole = ref(false);
+const modifyRole = (user: string) => {
+  console.log('Modifying role for:', user);
+  const newRole: string = rolesOfUser.value.join(',');
+  updateUserRole({ username: user, newRole: newRole }).then(res => {
+    if (res.success) {
+      message('修改角色成功');
+      selectAllRoles();
+      selectRoleByUsername(user);
+    } else {
+      message('修改角色失败');
+    }
+  }).catch((error) => {
+    console.error('修改角色请求失败:', error);
+    if (error.response) {
+      console.error('API Error:', error.response.data);
+    } else if (error.message) {
+      console.error('Request Error:', error.message);
+    }
+    message('修改角色失败');
+  });
 };
 
 // 方法：修改用户信息
@@ -134,6 +202,7 @@ const deleteUser = (user) => {
 
 onMounted(() => { 
   selectAllUsers(undefined);
+  selectAllRoles();
 });
 </script>
 
@@ -158,14 +227,20 @@ onMounted(() => {
     </div>
 
     <!-- User List Table -->
-    <el-table :data="filteredUsers" style="width: 100%" stripe>
+    <el-table :data="filteredUsers" style="width: 100%" stripe  >
       <el-table-column label="#" type="index" width="80" />
       <el-table-column prop="username" label="账号" />
       <el-table-column prop="real_name" label="名称" />
       <el-table-column prop="email" label="邮箱地址" />
       <el-table-column label="操作" width="300">
         <template #default="{ row }">
-          <el-button size="small" type="warning" @click="modifyRole(row)">修改角色</el-button>
+          <el-button size="small" type="warning" @click="()=> {
+        selectRoleByUsername(row.username);
+        curUser = row.username;
+          isModifyRole = true;
+          
+          }">修改角色</el-button>
+
           <el-button size="small" type="primary" @click="modifyUser(row)">修改信息</el-button>
           <el-button size="small" type="danger" @click="deleteUser(row)">删除</el-button>
         </template>
@@ -174,6 +249,32 @@ onMounted(() => {
 
     <!-- No Data Row -->
     <el-empty v-if="filteredUsers.length === 0" description="没有找到用户" />
+
+    <!-- 修改用户角色 Dialog -->
+    <el-dialog
+    :modal="false"
+    v-model="isModifyRole"
+    :before-close="() => { isModifyRole = false }"
+  >
+    <p >当前用户为：{{ curUser }}</p>
+     <el-transfer
+     v-model="rolesOfUser"
+     :data="roles"
+     :titles="['所有角色', '当前用户角色']"
+    filterable
+    filter-placeholder="角色搜索"
+  />
+  <br>
+  <p>{{ rolesOfUser }}</p>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="isModifyRole = false">取消</el-button>
+        <el-button type="primary" @click="modifyRole(curUser)">
+          确认
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
 
     <!-- Add User Dialog -->
   <el-dialog

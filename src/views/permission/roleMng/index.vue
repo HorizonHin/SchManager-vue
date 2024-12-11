@@ -11,10 +11,10 @@ import {
 } from "element-plus";
 import { localForage } from "@/utils/localforage/index";
 import { message } from "@/utils/message";
-import { selectRole as selectRoleApi, addRole } from '@/api/admin';
-import { getPermissions as getPermissionsApi } from "@/api/permission";
-import {updRolePerm} from "@/api/permission";
-import { ro } from "element-plus/es/locales.mjs";
+import { getAllRole as selectRoleApi, addRole,deleteRole } from '@/api/admin';
+import { getPermissions as getPermissionsApi,updRolePerm } from "@/api/permission";
+
+
 
 
 
@@ -196,13 +196,24 @@ const handleModifyRoleInfo = (role: any) => {
   ElMessage.success(`修改 ${role.roleName} 的信息`);
 };
 
-const handleDeleteRole = (role: any) => {
-  ElMessageBox.confirm(`确定删除角色 ${role.roleName} 吗?`, "删除确认", {
+const handleDeleteRole = (roleName: string) => {
+  ElMessageBox.confirm(`确定删除角色 ${roleName} 吗?`, "删除确认", {
     type: "warning"
   }).then(() => {
-    ElMessage.success(`角色 ${role.roleName} 删除成功`);
-    // 删除操作
-    roles.value = roles.value.filter(r => r.id !== role.id);
+      deleteRole({roleName : roleName}).then(res => {
+        if (res.success) {
+          message("删除角色成功");
+          // 刷新角色列表
+          selectRoles();
+        }
+        else {
+          message("删除角色失败");
+          console.error(res.msg);
+        }
+      }).catch(err => {
+        message("删除角色发生错误");
+        console.error(err);
+      });    
   });
 };
 
@@ -288,7 +299,7 @@ onMounted(() => {
         :data="allPermissionsRef"
         :props="treeProps"
         :default-checked-keys="IdsOfRolePerms"
-        :check-strictly="true"
+        :check-strictly="false"
         show-checkbox
         node-key="id"
         @check-change="()=>(selectedPermissions)"
