@@ -140,6 +140,7 @@ const submitNewUser = async (formEl: FormInstance | undefined) => {
         if (res.success) {
           addUserDialogVisible.value = false;
           resetAddUserForm();
+          selectAllUsers(undefined);
           message('新增用户成功');
         } else {
           message('新增用户失败');

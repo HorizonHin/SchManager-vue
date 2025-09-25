@@ -44,6 +44,8 @@ const selectRoles = async () => {
   });
 }
 
+const curRoleName = ref(" ");
+
 const allPermissionsRef = ref(null);
 
 const treeProps = {};
@@ -130,14 +132,13 @@ const selectedPermissions = computed(() => {
 
 
 function cancelHandlePermOfRole() {
-    currentRoleName.value = "";
+  curRoleName.value = "";
     permOfcurrentRoleRef.value = null;
   isPermOfRoleVisible.value = false;
     
  };
 async function handlePermOfRole(roleName: string) {
-  console.log(roleName,permOfcurrentRoleRef.value,allPermissionsRef.value,selectedPermissions.value);
-  currentRoleName.value = roleName;
+  console.log("要修改权限的角色",roleName);
   if (!roleName) {
     message("用户名", { type: "error" });
     return;
@@ -164,12 +165,12 @@ if (JSON.stringify(sortedSelectedPermissions) === JSON.stringify(sortedIdsOfRole
 
   const PermsIds = selectedPermissions.value.join();
   console.log("权限ids", PermsIds);
-  const res = await updRolePerm(currentRoleName.value, PermsIds);
+  const res = await updRolePerm(roleName, PermsIds);
   if (res.success) {
     message("修改权限成功");
     isPermOfRoleVisible.value = false;
     getPermissions();
-    getPermissions(currentRoleName.value);
+    getPermissions(roleName);
   }
   else {
     message("修改权限失败");
@@ -181,14 +182,13 @@ const isAddRole = ref(false);
 const newRoleNameRef = ref({newRoleName:""});
 
 const isPermOfRoleVisible = ref(false);
-const currentRoleName = ref<string>("");
+
 //根据·角色名称·修改权限
 const handleModifyPermissions = (roleName: string) => {
   console.log("修改权限", roleName);
   getPermissions();
   getPermissions(roleName);
-  currentRoleName.value = roleName;
-  console.log("权限", permOfcurrentRoleRef.value);
+  curRoleName.value = roleName;
   isPermOfRoleVisible.value = true;
 };
 
@@ -283,7 +283,7 @@ onMounted(() => {
           <ElButton
             size="small"
             type="primary"
-            @click="handleModifyPermissions(row.roleName)"
+            @click="(() => handleModifyPermissions(row.roleName))"
             >修改角色权限</ElButton
           >
    <!-- 角色权限树弹窗 -->
@@ -309,7 +309,7 @@ onMounted(() => {
       <template #footer>
         <div class="dialog-footer">
         <el-button @click="cancelHandlePermOfRole()">取消</el-button>
-        <el-button type="primary" @click="handlePermOfRole(row.roleName)">确定</el-button>
+        <el-button type="primary" @click="handlePermOfRole(curRoleName)">确定</el-button>
         </div>
       </template>
     </el-dialog>

@@ -13,7 +13,6 @@ import { Permission } from "@/model/pojos";
 import { ChildProcess } from "child_process";
 import { message } from "@/utils/message";
 
-
 defineOptions({
   name: "PermissionPage"
 });
