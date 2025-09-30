@@ -26,7 +26,7 @@
     </el-table>
 
     <div style="margin-bottom:12px">
-      <p>已选课程数量：<b>{{ selected.length }}</b> 门（需 ≥ 3）</p>
+      <p>已选课程数量：<b>{{ selected.length }}</b> 门（需 15～18 门）</p>
       <el-space>
         <el-button type="warning" @click="clear" :loading="loading.clear">清空选择</el-button>
         <el-button type="primary" :loading="loading.submit" :disabled="!validCount" @click="submit">
@@ -72,7 +72,7 @@ const loading = ref({
   refresh: false
 });
 
-const validCount = computed(() => selected.value.length >= 3);
+const validCount = computed(() => selected.value.length >= 15 && selected.value.length <= 18);
 
 async function loadCourses() {
   loading.value.courses = true;
@@ -106,7 +106,7 @@ function removeCourse(courseId: number) {
 
 async function submit() {
   if (!validCount.value) {
-    message("必须选择至少 3 门课程！", { type: "warning" });
+    message("必须选择 15～18 门课程！", { type: "warning" });
     return;
   }
   loading.value.submit = true;
