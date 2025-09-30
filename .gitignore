@@ -41,8 +41,6 @@ pnpm-debug.log*
 # Test coverage & reports
 coverage
 .nyc_output
-reports/
-report/
 stats.html
 
 # Build / tool caches
