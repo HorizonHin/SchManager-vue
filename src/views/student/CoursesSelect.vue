@@ -40,12 +40,12 @@
       <template #header>已选择课程</template>
       <el-tag
         v-for="c in selected"
-        :key="c.coursename"
+        :key="c.courseId"
         style="margin:4px"
         type="success"
         closable
         :disable-transitions="true"
-        @close="removeCourse(c.coursename)"
+        @close="removeCourse(c.courseId)"
       >{{ c.coursename }}</el-tag>
     </el-card>
   </div>
@@ -92,7 +92,7 @@ async function loadSelected() {
 }
 
 function isSelected(course: CourseDto) {
-  return selected.value.some(c => c.coursename === course.coursename);
+  return selected.value.some(c => c.courseId === course.courseId);
 }
 
 function selectCourse(course: CourseDto) {
@@ -100,8 +100,8 @@ function selectCourse(course: CourseDto) {
   selected.value.push(course);
 }
 
-function removeCourse(courseName: string) {
-  selected.value = selected.value.filter(c => c.coursename !== courseName);
+function removeCourse(courseId: number) {
+  selected.value = selected.value.filter(c => c.courseId !== courseId);
 }
 
 async function submit() {
@@ -111,7 +111,7 @@ async function submit() {
   }
   loading.value.submit = true;
   try {
-  const list = await unwrap(submitCourseSelection(currentUsername, selected.value.map(c => c.coursename)));
+  const list = await unwrap(submitCourseSelection(currentUsername, selected.value.map(c => c.courseId)));
     selected.value = list; // 后端返回校验后的列表
     message(`选课成功，已选择 ${selected.value.length} 门课程`, { type: "success" });
   } finally {

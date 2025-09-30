@@ -69,7 +69,8 @@ export const useUserStore = defineStore({
     async loginByUsername(data) {
       return new Promise<UserResult>((resolve, reject) => {
         //后端接口为/api/user/login
-        http.request<UserResult>("post", "/api/login", { data })
+        // 模拟登录为/login
+        http.request<UserResult>("post", "/api/user/login", { data })
           .then(data => {
             if (data?.success) setToken(data.data);
             resolve(data);

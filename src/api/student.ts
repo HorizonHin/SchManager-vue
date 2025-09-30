@@ -5,6 +5,7 @@ export interface CourseDto {
   username: string;
   coursename: string;
   teacher: string;
+  courseId: number;
 }
 
 export interface SimpleResult<T> {
@@ -24,7 +25,7 @@ export const fetchSelectedCourses = (studentName: string) =>
   });
 
 /** 提交选课（覆盖式提交） */
-export const submitCourseSelection = (studentName: string, courseIds: string[]) =>
+export const submitCourseSelection = (studentName: string, courseIds: number[]) =>
   http.request<SimpleResult<CourseDto[]>>("post", "/api/student/selectedCourses", {
     data: { studentName, courseIds }
   });
